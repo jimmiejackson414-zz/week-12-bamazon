@@ -21,3 +21,5 @@ INSERT INTO products (productName, departmentName, price, stockQuantity) VALUES 
 INSERT INTO products (productName, departmentName, price, stockQuantity) VALUES ('Sling Strap', 'Photography', 15, 30);
 INSERT INTO products (productName, departmentName, price, stockQuantity) VALUES ('Guitar Polish', 'Music', 5, 100);
 INSERT INTO products (productName, departmentName, price, stockQuantity) VALUES ('Freeze Dried Ice Cream', 'Food', 10, 80);
+
+SELECT * FROM products;
