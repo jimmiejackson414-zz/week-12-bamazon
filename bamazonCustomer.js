@@ -40,14 +40,15 @@ var start = function() {
             console.log('Item Id: ' + res[i].itemID + '|' + ' Product: ' + res[i].productName + '|' + ' Price: $' + res[i].price + '|' + ' In Stock: ' + res[i].stockQuantity);
             console.log('-----------------------------------------------------------------------');
         }
+        purchaseItem();
     })
-    purchaseItem();
+
 }
 
 // Function to purchase an item.
 var purchaseItem = function() {
     inquirer.prompt([{
-        name: "id",
+        name: "itemID",
         type: "input",
         message: "What item would you like to purchase? Select using ID.",
         validate: function(value) {
@@ -71,7 +72,8 @@ var purchaseItem = function() {
         }
 
     }]).then(function(answer) {
-        connection.query('SELECT * FROM products WHERE id = ?', [answer.itemID], function(err, res) {
+        connection.query('SELECT * FROM products WHERE itemID = ?', [answer.itemID], function(err, res) {
+            console.log(res);
             if (answer.stockQuantity > res[0].stockQuantity) {
                 console.log('Not enough in stock');
                 console.log('Go on, git!');
@@ -79,24 +81,20 @@ var purchaseItem = function() {
             } else {
                 priceTotal = res[0].price * answer.stockQuantity;
                 currentDepartment = res[0].departmentName;
-                console.log('Thanks for your order');
                 console.log('Your Total Amount is $' + priceTotal);
+                console.log('Thanks for your order');
                 console.log('');
-                connection.query('UPDATE products SET ? Where ?', [{
-                    stockQuantity: res[0].stockQuantity - answer.stockQuantity
-                }, {
-                    id: answer.itemID
-                }], function(err, res) {});
+                var math = res[0].stockQuantity - parseInt(answer.stockQuantity);
+                connection.query('UPDATE products SET stockQuantity= ' + math + ' WHERE itemID =' + answer.itemID);
                 quitBamazon();
             }
-        })
+        });
+    });
 
-    }, function(err, res) {})
 };
 
 
 // Function to quit Bamazon
 var quitBamazon = function() {
-	connection.end();
+    connection.end();
 }
-
