@@ -1,3 +1,7 @@
+///////////////
+// VARIABLES //
+///////////////
+
 // Adding dependencies and storing into variables
 var mysql = require('mysql');
 var inquirer = require('inquirer');
@@ -13,6 +17,13 @@ var connection = mysql.createConnection({
 });
 
 
+
+///////////////
+// FUNCTIONS //
+///////////////
+
+
+// Connects to database and console logs connection
 connection.connect(function(err) {
     if (err) throw err;
     console.log("Connected as id " + connection.threadId);
@@ -20,10 +31,14 @@ connection.connect(function(err) {
 })
 
 
-
+// Starts Bamazon 
 var start = function() {
     connection.query('SELECT * FROM products', function(err, res) {
-        console.log(res);
+        for (var i = 0; i < res.length; i++){
+        	console.log('Department Name: ' + res[i].departmentName);
+            console.log('Item Id: '+res[i].itemID + '|' + ' Product: ' + res[i].productName + '|' + ' Price: $' + res[i].price + '|' + ' In Stock: '+ res[i].stockQuantity);
+            console.log('-----------------------------------------------------------------------');
+        }
         inquirer.prompt({
             name: 'purchaseProduct',
             type: 'input',
@@ -32,13 +47,13 @@ var start = function() {
             connection.query('UPDATE products SET ? WHERE ?', {
                     itemname: answer.item,
                 })
-                // if (answer.purchaseProduct.toUpperCase() == choice) {
-                //     purchaseItem();
-                // } else if (answer.purchaseProduct.toUpperCase() == 'Q') {
-                //     quitBamazon();
-                // } else {
-                //     console.log("You didn't select a valid product!");
-                // }
+                if (answer.purchaseProduct.toUpperCase() == choice) {
+                    purchaseItem();
+                } else if (answer.purchaseProduct.toUpperCase() == 'Q') {
+                    quitBamazon();
+                } else {
+                    console.log("You didn't select a valid product!");
+                }
         })
     })
 
@@ -46,7 +61,19 @@ var start = function() {
 
 // Function to run purchaseItem
 var purchaseItem = function() {
-
+	inquirer.prompt([{
+		name: 'item',
+		type: 'input',
+		message: 'What would you like to purchase? Choose with Product ID, or press Q to quit.',
+		validate: function (input) {
+			var done = this.async();
+			setTimeout(function(){
+				if (input.toUpperCase == 'Q') {
+					quitBamazon();
+				}
+			})
+		}
+	}])
 }
 
 
