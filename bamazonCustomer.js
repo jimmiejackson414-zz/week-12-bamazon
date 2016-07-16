@@ -34,56 +34,69 @@ connection.connect(function(err) {
 // Starts Bamazon 
 var start = function() {
     connection.query('SELECT * FROM products', function(err, res) {
-        for (var i = 0; i < res.length; i++){
-        	console.log('Department Name: ' + res[i].departmentName);
-            console.log('Item Id: '+res[i].itemID + '|' + ' Product: ' + res[i].productName + '|' + ' Price: $' + res[i].price + '|' + ' In Stock: '+ res[i].stockQuantity);
+        for (var i = 0; i < res.length; i++) {
+            console.log('');
+            console.log('Department Name: ' + res[i].departmentName);
+            console.log('Item Id: ' + res[i].itemID + '|' + ' Product: ' + res[i].productName + '|' + ' Price: $' + res[i].price + '|' + ' In Stock: ' + res[i].stockQuantity);
             console.log('-----------------------------------------------------------------------');
         }
-        inquirer.prompt({
-            name: 'purchaseProduct',
-            type: 'input',
-            message: 'What would you like to purchase? Choose with Product ID, or press Q to quit.',
-        }).then(function(answer) {
-            connection.query('UPDATE products SET ? WHERE ?', {
-                    itemname: answer.item,
-                })
-                if (answer.purchaseProduct.toUpperCase() == choice) {
-                    purchaseItem();
-                } else if (answer.purchaseProduct.toUpperCase() == 'Q') {
-                    quitBamazon();
-                } else {
-                    console.log("You didn't select a valid product!");
-                }
-        })
     })
-
+    purchaseItem();
 }
 
-// Function to run purchaseItem
+// Function to purchase an item.
 var purchaseItem = function() {
-	inquirer.prompt([{
-		name: 'item',
-		type: 'input',
-		message: 'What would you like to purchase? Choose with Product ID, or press Q to quit.',
-		validate: function (input) {
-			var done = this.async();
-			setTimeout(function(){
-				if (input.toUpperCase == 'Q') {
-					quitBamazon();
-				}
-			})
-		}
-	}])
-}
+    inquirer.prompt([{
+        name: "id",
+        type: "input",
+        message: "What item would you like to purchase? Select using ID.",
+        validate: function(value) {
+            var valid = value.match(/^[0-9]+$/)
+            if (valid) {
+                return true
+            }
+            return 'Please enter a valid Product ID'
+        }
+
+    }, {
+        name: "stockQuantity",
+        type: "input",
+        message: "How many would you like to purchase?",
+        validate: function(value) {
+            var valid = value.match(/^[0-9]+$/)
+            if (valid) {
+                return true
+            }
+            return 'Please enter a valid quantity.'
+        }
+
+    }]).then(function(answer) {
+        connection.query('SELECT * FROM products WHERE id = ?', [answer.itemID], function(err, res) {
+            if (answer.stockQuantity > res[0].stockQuantity) {
+                console.log('Not enough in stock');
+                console.log('Go on, git!');
+                quitBamazon();
+            } else {
+                priceTotal = res[0].price * answer.stockQuantity;
+                currentDepartment = res[0].departmentName;
+                console.log('Thanks for your order');
+                console.log('Your Total Amount is $' + priceTotal);
+                console.log('');
+                connection.query('UPDATE products SET ? Where ?', [{
+                    stockQuantity: res[0].stockQuantity - answer.stockQuantity
+                }, {
+                    id: answer.itemID
+                }], function(err, res) {});
+                quitBamazon();
+            }
+        })
+
+    }, function(err, res) {})
+};
 
 
 // Function to quit Bamazon
 var quitBamazon = function() {
-
+	connection.end();
 }
 
-
-// Starts the server
-// server.listen(PORT, function() {
-//     console.log('Server listening on: http://localhost:%s', connection.port);
-// })
